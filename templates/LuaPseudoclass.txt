@@ -1,0 +1,31 @@
+require("scot.massie.lua.lib.PseudoClassUtils")
+
+--region declaration of class ${NAME}
+
+---@class ${NAME}
+--- Define fields/functions here
+---@overload fun(): ${NAME}
+${NAME} =
+{
+    __fieldNames =
+    {
+        -- field names also here as strings enclosed in quotes.
+    },
+}
+
+__internal.${NAME} = {}
+
+function __internal.${NAME}.constructor()
+    return {}
+end
+
+makePseudoClass("${NAME}", ${NAME}, __internal.${NAME}.constructor)
+
+-- Uncomment to enable interning for the constructor. This makes it so that where the same arguments are provided to the
+-- constructor, the same instance is returned.
+--makePseudoClassInternInstances(${NAME})
+--endregion
+
+
+
+-- Class functions here.
