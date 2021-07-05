@@ -1,4 +1,5 @@
 require("scot.massie.lua.lib.InternalGlobalTable")
+require("scot.massie.lua.lib.StringUtils")
 require("scot.massie.lua.lib.TableUtils")
 
 ---@shape Pseudoclass<T>
@@ -48,17 +49,17 @@ function __internal.pseudoclasses.newInstanceMetatable(classTable)
         __index = function(t, k)
             local result = classTable[k]
 
-            if result == nil then
-                for _, fieldName in pairs(pseudoclass.__fieldNames) do
-                    if fieldName == k then
-                        return rawget(t, k)
-                    end
-                end
-
-                error("No such member: " .. tostring(k))
+            if result ~= nil then
+                return result
             end
 
-            return result
+            for _, fieldName in pairs(pseudoclass.__fieldNames) do
+                if fieldName == k then
+                    return rawget(t, k)
+                end
+            end
+
+            error("No such member: " .. tostring(k))
         end,
 
         __newindex = function(t, k, v)
@@ -105,12 +106,45 @@ function makePseudoClass(name, pseudoclass, constructor)
     pseudoclass.__className = name
     pseudoclass.__constructor = constructor
     pseudoclass.__instanceMetatable = __internal.pseudoclasses.newInstanceMetatable(pseudoclass)
+
+    if pseudoclass.__parent ~= nil then
+        tbl.addAll(pseudoclass.__fieldNames, pseudoclass.__parent.__fieldNames)
+
+        ---@param k string
+        for k, v in pairs(pseudoclass.__parent) do
+            if (type(k) == "string") and (not k:startsWith("__")) then
+                -- Don't need to check for presence of new functions as they're added after makePseudoClass is called.
+                pseudoclass[k] = v
+            end
+        end
+    end
+
     setmetatable(pseudoclass, __internal.pseudoclasses.classMetatable)
 end
 
 ---@param pseudoclass table
 function makePseudoClassInternInstances(pseudoclass)
     __internal.pseudoclasses.internPools[pseudoclass] = {}
+end
+
+function isInstanceOfPseudoclass(itemToCheck, t)
+    if getmetatable(t) ~= __internal.pseudoclasses.classMetatable then
+        error("isOfType needs to be passed a pseudoclass.")
+    end
+
+    if type(itemToCheck) ~= "table" then
+        return false
+    end
+
+    if getmetatable(itemToCheck) == t.__instanceMetatable then
+        return true
+    end
+
+    if t.__parent ~= nil then
+        return isInstanceOfPseudoclass(itemToCheck, t.__parent)
+    end
+
+    return false
 end
 
 

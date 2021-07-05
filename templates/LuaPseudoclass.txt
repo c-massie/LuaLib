@@ -7,6 +7,9 @@ require("scot.massie.lua.lib.PseudoClassUtils")
 ---@overload fun(): ${NAME}
 ${NAME} =
 {
+    -- Define parent class here and in @class with ": {parent class name}" after the class name.
+    __parent = nil,
+
     __fieldNames =
     {
         -- field names also here as strings enclosed in quotes.
