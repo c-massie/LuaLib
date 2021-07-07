@@ -205,8 +205,10 @@ end
 
 
 ---@param item T
+---@return boolean
 function Collection:remove(item)
     error("Not implemented.")
+    return --[[---@type boolean]] nil
 end
 
 ---@param items Collection<T>

@@ -64,6 +64,8 @@ makePseudoClass("List", List, __internal.List.constructor)
     get
     getFirst
     getLast
+    getInitial
+    getFinal
     getSublist
     getWhere
     getAlsoIn (intersection)
@@ -97,6 +99,8 @@ makePseudoClass("List", List, __internal.List.constructor)
     withoutAt
     withoutFirst
     withoutLast
+    withoutInitial
+    withoutFinal
     withoutInRange
     withoutAll
     withoutWhere
@@ -105,6 +109,8 @@ makePseudoClass("List", List, __internal.List.constructor)
     removeAt
     removeFirst
     removeLast
+    removeInitial
+    removeFinal
     removeInRange
     removeAll
     removeWhere
@@ -115,324 +121,669 @@ makePseudoClass("List", List, __internal.List.constructor)
     clone
 ]]
 
--- TO DO: Continue writing.
-
 
 
 
 ---@return number
 function List:size()
-    error("Not implemented yet")
-    return --[[---@type number]] nil
+    return #self.content
 end
 
 ---@return boolean
 function List:isEmpty()
-    error("Not implemented yet")
-    return --[[---@type boolean]] nil
+    return #self.content == 0
 end
 
 ---@return boolean
 function List:hasAnything()
-    error("Not implemented yet")
-    return --[[---@type boolean]] nil
+    return #self.content > 0
 end
 
 
 ---@return boolean
 function List:contains(item)
-    error("Not implemented yet")
-    return --[[---@type boolean]] nil
+    for k, v in pairs(self.content) do
+        if item == v then
+            return true
+        end
+    end
+
+    return false
 end
 
 ---@return boolean
 function List:containsAll(items)
-    error("Not implemented yet")
-    return --[[---@type boolean]] nil
+    for item in items:each() do
+        if not self:contains(item) then
+            return false
+        end
+    end
+
+    return true
 end
 
 ---@return boolean
 function List:containsAny(items)
-    error("Not implemented yet")
-    return --[[---@type boolean]] nil
+    for item in items:each() do
+        if not self:contains(item) then
+            return true
+        end
+    end
+
+    return false
 end
 
+---@param items Collection<T>
 ---@return boolean
 function List:containsOnly(items)
-    error("Not implemented yet")
-    return --[[---@type boolean]] nil
+    return items:containsAll(self)
 end
 
+---@param items Collection<T>
 ---@return boolean
 function List:containsSameItemsAs(items)
-    error("Not implemented yet")
-    return --[[---@type boolean]] nil
+    return self:containsAll(items) and items:containsAll(self)
 end
 
 ---@param items Collection<T>
 ---@return boolean
 function List:containsExactly(items)
-    error("Not implemented yet")
-    return --[[---@type boolean]] nil
+    local selfClone = self:clone()
+
+    for item in items:each() do
+        if not selfClone:remove(item) then
+            return false
+        end
+    end
+
+    return true
 end
 
 ---@param items List<T>
 ---@return boolean
 function List:containsExactlyInSameOrder(items)
-    error("Not implemented yet")
-    return --[[---@type boolean]] nil
+    local thisSize = self:size()
+    local thatSize = self:size()
+
+    if thisSize ~= thatSize then
+        return false
+    end
+
+    for i = 1, thisSize do
+        if self.content[i] ~= items:get(i) then
+            return false
+        end
+    end
+
+    return true
 end
 
 
 ---@param index number
 ---@return T
 function List:get(index)
-    error("Not implemented yet")
-    return --[[---@type T]] nil
+    if index <= 0 then
+        error("Attempted to get at a 0 or negative index on a list.")
+    end
+
+    if index > self:size() then
+        error("Attempted to get at index " .. tostring(index) .. " on a list of size " .. tostring(self:size()) .. ".")
+    end
+
+    return self.content[index]
 end
 
 ---@return T
 function List:getFirst()
-    error("Not implemented yet")
-    return --[[---@type T]] nil
+    if self:isEmpty() then
+        error("Attempted to get first item in an empty list.")
+    end
+
+    return self.content[1]
 end
 
 ---@return T
 function List:getLast()
-    error("Not implemented yet")
-    return --[[---@type T]] nil
+    if self:isEmpty() then
+        error("Attempted to get last item in an empty list.")
+    end
+
+    return self.content[#self.content]
+end
+
+---@param amount number
+---@return List<T>
+function List:getInitial(amount)
+    local result = List()
+
+    for i = 1, math.min(amount, #self.content) do
+        result:add(self.content[i])
+    end
+
+    return result
+end
+
+function List:getFinal(amount)
+    local result = List()
+    local contentSize = #self.content
+
+    for i = math.max(contentSize + 1 - amount, 1), contentSize do
+        result:add(self.content[i])
+    end
+
+    return result
 end
 
 ---@param fromInclusive number
 ---@param toExclusive number
 ---@return List<T>
 function List:getSublist(fromInclusive, toExclusive)
-    error("Not implemented yet")
-    return --[[---@type List<T>]] nil
+    if toExclusive < fromInclusive then
+        error("Attempted to get a sublist of a list where the upper bound was lower than the lower bound.")
+    end
+
+    local result = List()
+    local contentSize = #self.content
+
+    for i = math.max(1, fromInclusive), math.min(contentSize + 1, toExclusive) do
+        result:add(self.content[i])
+    end
+
+    return result
 end
 
+---@param predicate fun(item: T): boolean
 ---@return List<T>
 function List:getWhere(predicate)
-    error("Not implemented yet")
-    return --[[---@type List<T>]] nil
+    local result = List()
+
+    for _, v in ipairs(self.content) do
+        if predicate(v) then
+            result:add(v)
+        end
+    end
+
+    return result
 end
 
+---@param other Collection<T>
 ---@return List<T>
 function List:getAlsoIn(other)
-    error("Not implemented yet")
-    return --[[---@type List<T>]] nil
+    local result = List()
+
+    for _, v in ipairs(self.content) do
+        if other:contains(v) then
+            result:add(v)
+        end
+    end
+
+    return result
 end
 
+---@param other Collection<T>
 ---@return List<T>
 function List:getNotIn(other)
-    error("Not implemented yet")
-    return --[[---@type List<T>]] nil
+    local result = List()
+
+    for _, v in ipairs(self.content) do
+        if not other:contains(v) then
+            result:add(v)
+        end
+    end
+
+    return result
 end
 
 
----@return (fun(beingIteratedOver: List<T>, previousItem: T): T), List<T>, number
+---@return (fun(beingIteratedOver: List<T>, previousItem: T): T)
 function List:each()
-    error("Not implemented yet")
-    return --[[---@type (fun(beingIteratedOver: List<T>, previousItem: T): T), List<T>, number]] nil
+    local i = 0
+
+    return function(beingIteratedOver, previousItem)
+        i = i + 1
+        return self.content[i]
+    end
 end
 
 ---@return (fun(beingIteratedOver: List<T>, previousIndex: number): number, T), List<T>, number
 function List:eachWithIndex()
-    error("Not implemented yet")
-    return --[[---@type (fun(beingIteratedOver: List<T>, previousIndex: number): number, T), List<T>, number]] nil
+    return
+    ---@param v List<T>
+    ---@param i number
+    ---@return number, T
+    function(v, i)
+        i = i + 1
+
+        if i <= #self.content then
+            return i, self.content[i]
+        end
+    end, self, 0
 end
 
 ---@return (fun(beingIteratedOver: List<T>, previousIndex: number): number, T), List<T>, number
 function List:eachInOrder()
-    error("Not implemented yet")
-    return --[[---@type (fun(beingIteratedOver: List<T>, previousIndex: number): number, T), List<T>, number]] nil
+    return
+    ---@param v List<T>
+    ---@param i number
+    ---@return number, T
+    function(v, i)
+        i = i + 1
+
+        if i <= #self.content then
+            return i, self.content[i]
+        end
+    end, self, 0
 end
 
-
 function List:reverse()
-    error("Not implemented yet")
+    local newContent = {}
+
+    for i = #self.content, 1, -1 do
+        table.insert(newContent, self.content[i])
+    end
+
+    self.content = newContent
 end
 
 function List:shuffle()
-    error("Not implemented yet")
+    self.content = tbl.shuffled(self.content)
 end
 
----@param NumberOfPlacesToCycle number
-function List:cycle(NumberOfPlacesToCycle)
-    error("Not implemented yet")
+---@param numberOfPlacesToCycle number
+function List:cycle(numberOfPlacesToCycle)
+    self.content = tbl.cycled(self.content, numberOfPlacesToCycle)
 end
 
 function List:cycleRandomly()
-    error("Not implemented yet")
+    self.content = tbl.cycledRandomly(self.content)
 end
 
 
 ---@return List<T>
 function List:reversed()
-    error("Not implemented yet")
-    return --[[---@type List<T>]] nil
+    local result = List()
+
+    for i = #self.content, 1, -1 do
+        result:add(self.content[i])
+    end
+
+    return result
 end
 
 ---@return List<T>
 function List:shuffled()
-    error("Not implemented yet")
-    return --[[---@type List<T>]] nil
+    local result = List()
+
+    for _, item in pairs(self.content) do
+        result:addAt(math.random(result:size() + 1), item)
+    end
+
+    return result
 end
 
----@param NumberOfPlacesToCycle number
+---@param numberOfPlacesToCycle number
 ---@return List<T>
-function List:cycled(NumberOfPlacesToCycle)
-    error("Not implemented yet")
-    return --[[---@type List<T>]] nil
+function List:cycled(numberOfPlacesToCycle)
+    if numberOfPlacesToCycle == nil then
+        numberOfPlacesToCycle = 1
+    else
+        numberOfPlacesToCycle = (numberOfPlacesToCycle % #self.content)
+    end
+
+    if numberOfPlacesToCycle < 0 then
+        numberOfPlacesToCycle = numberOfPlacesToCycle + #self.content
+    end
+
+    local result = List()
+
+    for i = numberOfPlacesToCycle + 1, #self.content do
+        result:add(self.content[i])
+    end
+
+    for i = 1, numberOfPlacesToCycle do
+        result:add(self.content[i])
+    end
+
+    return result
 end
 
 ---@return List<T>
 function List:cycledRandomly()
-    error("Not implemented yet")
-    return --[[---@type List<T>]] nil
+    return self:cycled(math.random(1, self:size()))
 end
 
 
 ---@generic NT
+---@param transformer fun(x: T): NT
 ---@return List<NT>
 function List:transformed(transformer)
-    error("Not implemented yet")
-    return --[[---@type List<NT>]] nil
+    ---@type List<NT>
+    local result = --[[---@type List<NT>]] List()
+
+    for _, item in ipairs(self.content) do
+        result:add(transformer(item))
+    end
+
+    return result
 end
 
-
+---@param item T
 ---@return List<T>
 function List:with(item)
-    error("Not implemented yet")
-    return --[[---@type List<T>]] nil
+    local result = self:clone()
+    result:add(item)
+    return result
 end
 
 ---@return List<T>
+function List:withAt(index, item)
+    local result = self:clone()
+    result:addAt(index, item)
+    return result
+end
+
+---@param items Collection<T>
+---@return List<T>
 function List:withAll(items)
-    error("Not implemented yet")
-    return --[[---@type List<T>]] nil
+    local result = self:clone()
+
+    for item in items:each() do
+        result:add(item)
+    end
+
+    return result
 end
 
-
+---@param item T
 function List:add(item)
-    error("Not implemented yet")
+    table.insert(self.content, item)
 end
 
+---@param index number
+---@param item T
+function List:addAt(index, item)
+    table.insert(self.content, index, item)
+end
+
+---@param items Collection<T>
 function List:addAll(items)
-    error("Not implemented yet")
+    for item in items:each() do
+        self:add(item)
+    end
 end
 
 
 ---@param index number
 ---@param item T
 function List:set(index, item)
-    error("Not implemented yet")
+    if index <= 0 then
+        error("Attempts to set a value at " .. index .. ", which is 0 or below, in a list.")
+    end
+
+    local size = #self.content
+
+    if index > (size + 1) then
+        error("Attempted to set a value at " .. tostring(index) .. " in a list of size " .. tostring(size))
+    end
+
+    self.content[index] = item
 end
 
 
 ---@return List<T>
 function List:without(item)
-    error("Not implemented yet")
-    return --[[---@type List<T>]] nil
+    local result = List()
+
+    for _, v in ipairs(self.content) do
+        if item ~= v then
+            result:add(v)
+        end
+    end
+
+    return result
 end
 
 ---@param index number
 ---@return List<T>
 function List:withoutAt(index)
-    error("Not implemented yet")
-    return --[[---@type List<T>]] nil
+    if index <= 0 then
+        error("Attempted to get list without index of 0 or less.")
+    end
+
+    local size = #self.content
+
+    if index > size then
+        error("Attempted to get list without index of " .. tostring(index) .. " from a list of size " .. tostring(size))
+    end
+
+    local result = List()
+
+    for i = 1, index - 1 do
+        result:add(self.content[i])
+    end
+
+    for i = index + 1, size do
+        result:add(self.content[i])
+    end
+
+    return result
 end
 
----@param amount number | nil
 ---@return List<T>
-function List:withoutFirst(amount)
-    error("Not implemented yet")
-    return --[[---@type List<T>]] nil
+function List:withoutFirst()
+    local result = List()
+
+    for i = 2, #self.content do
+        result:add(self.content[i])
+    end
+
+    return result
 end
 
----@param amount number | nil
 ---@return List<T>
-function List:withoutLast(amount)
-    error("Not implemented yet")
-    return --[[---@type List<T>]] nil
+function List:withoutLast()
+    local result = List()
+
+    for i = 1, #self.content - 1 do
+        result:add(self.content[i])
+    end
+
+    return result
+end
+
+---@param amount number
+---@return List<T>
+function List:withoutInitial(amount)
+    local result = List()
+
+    for i = math.max(1, amount + 1), #self.content do
+        result:add(self.content[i])
+    end
+
+    return result
+end
+
+---@param amount number
+---@return List<T>
+function List:withoutFinal(amount)
+    local result = List()
+
+    for i = 1, math.min(#self.content, #self.content - amount) do
+        result:add(self.content[i])
+    end
+
+    return result
 end
 
 ---@param fromInclusive number
 ---@param toExclusive number
 ---@return List<T>
 function List:withoutInRange(fromInclusive, toExclusive)
-    error("Not implemented yet")
-    return --[[---@type List<T>]] nil
+    if toExclusive < fromInclusive then
+        error("Attempted to get a list from another list without elements in a range where the upper bound was lower than the lower bound")
+    end
+
+    local result = LisT()
+
+    for i = math.max(1, fromInclusive), math.min(#self.content, toExclusive - 1) do
+        result:add(self.content[i])
+    end
+
+    return result
 end
 
 
+---@param items Collection<T>
 ---@return List<T>
 function List:withoutAll(items)
-    error("Not implemented yet")
-    return --[[---@type List<T>]] nil
+    local result = List()
+
+    for _, item in ipairs(self.content) do
+        if not items:contains(item) then
+            result:add(item)
+        end
+    end
+
+    return result
 end
 
+---@param predicate fun(item: T): boolean
 ---@return List<T>
 function List:withoutWhere(predicate)
-    error("Not implemented yet")
-    return --[[---@type List<T>]] nil
+    local result = List()
+
+    for _, item in ipairs(self.content) do
+        if not predicate(item) then
+            result:add(item)
+        end
+    end
+
+    return result
 end
 
-
+---@return boolean
 function List:remove(item)
-    error("Not implemented yet")
+    ---@type number
+    local positionToRemove = --[[---@type number]] nil
+
+    for i, v in ipairs(self.content) do
+        if item == v then
+            positionToRemove = i
+            break
+        end
+    end
+
+    if positionToRemove ~= nil then
+        table.remove(self.content, positionToRemove)
+        return true
+    else
+        return false
+    end
 end
 
 ---@param index number
 function List:removeAt(index)
-    error("Not implemented yet")
+    table.remove(self.content, index)
 end
 
----@param amount number | nil
-function List:removeFirst(amount)
-    error("Not implemented yet")
+function List:removeFirst()
+    if self:isEmpty() then
+        error("Attempted to remove first element of an empty list.")
+    end
+
+    table.remove(self.content, 1)
 end
 
----@param amount number | nil
-function List:removeLast(amount)
-    error("Not implemented yet")
+function List:removeLast()
+    if self:isEmpty() then
+        error("Attempted to remove last element of an empty list.")
+    end
+
+    table.remove(self.content, #self.content)
+end
+
+---@param amount number
+function List:removeInitial(amount)
+    for i = 1, math.min(#self.content, amount) do
+        table.remove(self.content, 1)
+    end
+end
+
+---@param amount number
+function List:removeFinal(amount)
+    for i = 1, math.min(#self.content, amount) do
+        table.remove(self.content)
+    end
 end
 
 ---@param fromInclusive number
 ---@param toExclusive number
 function List:removeInRange(fromInclusive, toExclusive)
-    error("Not implemented yet")
+    if toExclusive < fromInclusive then
+        error("Attempted to remove items from a list in a range where the upper bound was lower than the lower bound.")
+    end
+
+    for i = toExclusive - 1, fromInclusive, -1 do
+        table.remove(self.content, i)
+    end
 end
 
 function List:removeAll(items)
-    error("Not implemented yet")
+    for item in items:each() do
+        self:remove(item)
+    end
 end
 
+---@param predicate fun(item: T): boolean
 function List:removeWhere(predicate)
-    error("Not implemented yet")
+    for i = #self.content, 1, -1 do
+        if predicate(self.content[i]) then
+            table.remove(self.content, i)
+        end
+    end
 end
 
 function List:clear()
-    error("Not implemented yet")
+    self.content = {}
 end
 
 
 ---@return T[]
 function List:toTable()
-    error("Not implemented yet")
-    return --[[---@type T[] ]] nil
+    ---@type T[]
+    local result = {}
+
+    for i, item in ipairs(self.content) do
+        result[i] = item
+    end
+
+    return result
 end
 
 ---@return string
 function List:toString()
-    error("Not implemented yet")
-    return --[[---@type string]] nil
+    local result = ""
+
+    for _, item in ipairs(self.content) do
+        result = result .. tostring(item) .. ", "
+    end
+
+    if result == "" then
+        return "[]"
+    end
+
+    return "[" .. result:sub(1, #result - 2) .. "]"
 end
 
 ---@return List<T>
 function List:clone()
-    error("Not implemented yet")
-    return --[[---@type List<T>]] nil
+    local result = List()
+
+    for _, item in ipairs(self.content) do
+        result:add(item)
+    end
+
+    return result
 end
 
 
