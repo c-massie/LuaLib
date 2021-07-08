@@ -31,7 +31,6 @@ makePseudoClass("Collection", Collection, __internal.Collection.constructor)
     containsOnly
     containsSameItemsAs
 
-    get
     getWhere
     getAlsoIn (intersection)
     getNotIn
