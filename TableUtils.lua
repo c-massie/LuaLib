@@ -409,6 +409,17 @@ function tbl.intersection(t1, t2, equalsFunction)
 end
 
 
+function tbl.joinStringsInOrder(t, separator)
+    local result = ""
+
+    for _, v in ipairs(t) do
+        result = result .. tostring(v) .. separator
+    end
+
+    return result:sub(1, -(1 + #separator))
+end
+
+
 ---@param item any
 ---@param levels number
 ---@param showKeysInSubTables boolean
@@ -446,6 +457,7 @@ function __internal.tbl.indentString(this)
 
     return table.concat(lines, "\n")
 end
+
 ---@generic T
 ---@param t table<T, any>
 ---@return T[]
