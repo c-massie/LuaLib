@@ -1,44 +1,64 @@
 require("scot.massie.lua.lib.TableUtils")
+require("scot.massie.lua.lib.PseudoClassUtils")
 
-function assertTrue(actual)
-    if actual ~= true then
-        error("\nExpected value to be true, was: " .. tostring(actual), 2)
+--region class Assertion<T>
+--region declaration of class Assertion
+
+---@class Assertion
+--- Define fields/functions here
+---@field _actual any
+---@overload fun(actual: any): Assertion
+Assertion =
+{}
+
+__internal.Assertion = {}
+
+function __internal.Assertion.constructor(actual)
+    return { _actual = actual }
+end
+
+makePseudoClass("Collection", Collection, __internal.Collection.constructor)
+--endregion
+
+function Assertion:isTrue()
+    if self._actual ~= true then
+        error("\nExpected value to be true, was: " .. tostring(self._actual), 2)
     end
 end
 
-function assertFalse(actual)
-    if actual ~= false then
-        error("\nExpected value to be false, was: " .. tostring(actual), 2)
+function Assertion:isFalse()
+    if self._actual ~= false then
+        error("\nExpected value to be false, was: " .. tostring(self._actual), 2)
     end
 end
 
-function assertEqual(expected, actual)
-    if expected ~= actual then
-        error("\nExpected value: " .. tostring(expected) .. "\nActual value:   " .. tostring(actual), 2)
+function Assertion:equals(expected)
+    if expected ~= self._actual then
+        error("\nExpected value: " .. tostring(expected) .. "\nActual value:   " .. tostring(self._actual), 2)
     end
 end
 
-function assertNotEqual(notExpected, actual)
-    if notExpected == actual then
-        error("\nUnexpected value: " .. tostring(actual), 2)
+function Assertion:doesntEqual(notExpected)
+    if notExpected == self._actual then
+        error("\nUnexpected value: " .. tostring(self._actual), 2)
     end
 end
 
-function assertNil(actual)
-    if actual ~= nil then
-        error("\nExpected value to be nil, was: " .. tostring(actual), 2)
+function Assertion:isNil()
+    if self._actual ~= nil then
+        error("\nExpected value to be nil, was: " .. tostring(self._actual), 2)
     end
 end
 
-function assertNotNil(actual)
-    if actual == nil then
+function Assertion:isNotNil()
+    if self._actual == nil then
         error("\nExpected value not to be nil, was nil", 2)
     end
 end
 
-function assertOfType(actual, ...)
+function Assertion:isOfType(...)
     local expectedTypeNames = { ... }
-    local actualTypeName = type(actual)
+    local actualTypeName = type(self._actual)
 
     for _, expectedTypeName in pairs(expectedTypeNames) do
         if actualTypeName == expectedTypeName then
@@ -55,10 +75,18 @@ function assertOfType(actual, ...)
             .. "], was actually of type: " .. actualTypeName)
 end
 
-function assertIsBool    (actual) assertOfType(actual, "boolean") end
-function assertIsNumber  (actual) assertOfType(actual, "number") end
-function assertIsString  (actual) assertOfType(actual, "string") end
-function assertIsFunction(actual) assertOfType(actual, "function", "CFunction") end
-function assertIsTable   (actual) assertOfType(actual, "table") end
-function assertIsThread  (actual) assertOfType(actual, "thread") end
-function assertIsUserdata(actual) assertOfType(actual, "userdata") end
+function Assertion:isBool()     self:isOfType("boolean") end
+function Assertion:isNumber()   self:isOfType("number") end
+function Assertion:isString()   self:isOfType("string") end
+function Assertion:isFunction() self:isOfType("function", "CFunction") end
+function Assertion:isTable()    self:isOfType("table") end
+function Assertion:isThread()   self:isOfType("thread") end
+function Assertion:isUserData() self:isOfType("userdata") end
+
+--endregion
+
+
+---@return Assertion
+function assertThat(actual)
+    return Assertion(actual)
+end
