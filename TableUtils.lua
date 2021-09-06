@@ -136,6 +136,41 @@ function __internal.tbl.defaultEqualsFunction(a, b)
     return a == b
 end
 
+function __internal.tbl.defaultComparator(a, b)
+    return a < b
+end
+
+
+---@generic V
+---@param t V[]
+---@param o V
+---@param comparator fun(a: V, b: V): boolean
+---@return number | nil
+---@overload fun<V>(t: V[], o: V): number | nil
+function tbl.indexOfInSorted(t, o, comparator)
+    if comparator == nil then
+        comparator = __internal.tbl.defaultComparator
+    end
+
+    local lbound = 1
+    local rbound = #t
+
+    while lbound <= rbound do
+        local pivot = lbound + ((rbound - lbound) / 2)
+        local itemAtPivot = t[pivot]
+
+        if comparator(o, itemAtPivot) then      -- o < pivot
+            rbound = pivot - 1
+        elseif comparator(itemAtPivot, o) then  -- o > pivot
+            lbound = pivot + 1
+        else                                    -- o == pivot
+            return pivot
+        end
+    end
+
+    return nil
+end
+
 
 ---@generic K, V
 ---@param t table<K, V>
