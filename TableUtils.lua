@@ -171,6 +171,26 @@ function tbl.indexOfInSorted(t, o, comparator)
     return nil
 end
 
+---@generic K, V
+---@param t table<K, V>
+---@param o V
+---@param equator fun(a: V, b: V): boolean
+---@return K | nil
+---@overload fun<K, V>(t: table<K, V>, o: V): K | nil
+function tbl.indexOf(t, o, equator)
+    if equator == nil then
+        equator = __internal.tbl.defaultEqualsFunction
+    end
+
+    for k, v in pairs(t) do
+        if equator(o, v) then
+            return k
+        end
+    end
+
+    return nil
+end
+
 
 ---@generic K, V
 ---@param t table<K, V>
@@ -321,8 +341,7 @@ function tbl.keysOf(t)
     return result
 end
 
----@generic K
----@generic V
+---@generic K, V
 ---@param t table<K, V>
 ---@return table<K, V>
 ---@overload fun(t: table): table

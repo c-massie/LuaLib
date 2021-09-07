@@ -83,6 +83,82 @@ function Assertion:isTable()    self:isOfType("table") end
 function Assertion:isThread()   self:isOfType("thread") end
 function Assertion:isUserData() self:isOfType("userdata") end
 
+
+
+function Assertion:containsContentsOf(t)
+    local missingValues = {}
+
+    for _, v in ipairs(t) do
+        if not tbl.contains(self._actual, v) then
+            tbl.add(missingValues, v)
+        end
+    end
+
+    if #missingValues > 0 then
+        local errorMsg = "Expected table to contain all expected values. Did not contain: "
+
+        for _, v in ipairs(missingValues) do
+            errorMsg = errorMsg .. "\n    " .. tostring(v)
+        end
+
+        error(errorMsg)
+    end
+end
+
+function Assertion:containsNothingButContentsOf(t)
+    local additionalValues = {}
+
+    for _, v in pairs(self._actual) do
+        if not tbl.contains(t, v) then
+            tbl.add(additionalValues, v)
+        end
+    end
+
+    if #additionalValues > 0 then
+        local errorMsg = "Table contained unexpected values: "
+
+        for _, v in ipairs(additionalValues) do
+            errorMsg = errorMsg .. "\n    " .. tostring(v)
+        end
+
+        error(errorMsg)
+    end
+end
+
+---@generic T
+---@param t T[]
+function Assertion:ContainsExactlyContentsOf(t)
+
+    ---@type T[]
+    local expectedValues = tbl.clone(t)
+    local unexpectedValues = {}
+
+    for _, v in pairs(self._actual) do
+        local positionOfVInExpectedValues = tbl.indexOf(expectedValues, v)
+
+        if positionOfVInExpectedValues == nil then
+            tbl.add(unexpectedValues, v)
+        else
+            tbl.remove(expectedValues, positionOfVInExpectedValues)
+        end
+    end
+
+    if #expectedValues > 0 or #unexpectedValues > 0 then
+        local errorMsg = "Table didn't match expected values.\nExpected values not present: "
+
+        for _, v in ipairs(expectedValues) do
+            errorMsg = errorMsg .. "    " .. tostring(v)
+        end
+
+        errorMsg = errorMsg .. "\n\nUnexpected values found: "
+
+        for _, v in ipairs(unexpectedValues) do
+            errorMsg = errorMsg .. "    " .. tostring(v)
+        end
+
+        error(errorMsg)
+    end
+end
 --endregion
 
 
