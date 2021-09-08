@@ -177,6 +177,8 @@ end
 ---@param equator fun(a: V, b: V): boolean
 ---@return K | nil
 ---@overload fun<K, V>(t: table<K, V>, o: V): K | nil
+---@overload fun<V>(t: V[], a: V, equator: fun(a: V, b: V): boolean): number | nil
+---@overload fun<V>(t: V[], a: V): number | nil
 function tbl.indexOf(t, o, equator)
     if equator == nil then
         equator = __internal.tbl.defaultEqualsFunction

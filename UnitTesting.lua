@@ -127,10 +127,8 @@ end
 
 ---@generic T
 ---@param t T[]
-function Assertion:ContainsExactlyContentsOf(t)
-
-    ---@type T[]
-    local expectedValues = tbl.clone(t)
+function Assertion:containsExactlyContentsOf(t)
+    local expectedValues = --[[---@type T[] ]]tbl.clone(t)
     local unexpectedValues = {}
 
     for _, v in pairs(self._actual) do
@@ -157,6 +155,37 @@ function Assertion:ContainsExactlyContentsOf(t)
         end
 
         error(errorMsg)
+    end
+end
+
+function Assertion:contains(...)
+    self:containsContentsOf({...})
+end
+
+function Assertion:containsNothingBut(...)
+    self:containsNothingButContentsOf({...})
+end
+
+function Assertion:containsExactly(...)
+    self:containsExactlyContentsOf({...})
+end
+
+---@param n number
+function Assertion:hasSize(n)
+    local size = #(self._actual)
+
+    if size ~= n then
+        error("Expected to have a size of " .. tostring(v) .. ", actually had a size of " .. tostring(size) .. ".")
+    end
+end
+
+function Assertion:isEmpty()
+    for _ in pairs(this._actual) do
+        local errorMsg = "Expected to be empty, was not. Actually contained:"
+
+        for k, v in pairs(this._actual) do
+            errorMsg = errorMsg .. "\n    " .. tostring(v)
+        end
     end
 end
 --endregion
