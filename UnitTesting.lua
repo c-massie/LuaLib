@@ -180,12 +180,88 @@ function Assertion:hasSize(n)
 end
 
 function Assertion:isEmpty()
-    for _ in pairs(this._actual) do
+    for _ in pairs(self._actual) do
         local errorMsg = "Expected to be empty, was not. Actually contained:"
 
-        for k, v in pairs(this._actual) do
+        for k, v in pairs(self._actual) do
             errorMsg = errorMsg .. "\n    " .. tostring(v)
         end
+    end
+end
+
+function Assertion:isLessThan(x)
+    if not (self._actual < x) then
+        error("Expected to be less than " .. tostring(x) .. ", was " .. tostring(self._actual) .. ".")
+    end
+end
+
+function Assertion:isLessThanOrEqualTo(x)
+    if not (self._actual <= x) then
+        error("Expected to be less than or equal to " .. tostring(x) .. ", was " .. tostring(self._actual) .. ".")
+    end
+end
+
+function Assertion:isGreaterThan(x)
+    if not (self._actual > x) then
+        error("Expected to be greater than " .. tostring(x) .. ", was " .. tostring(self._actual) .. ".")
+    end
+end
+
+function Assertion:isGreaterThanOrEqualTo(x)
+    if not (self._actual >= x) then
+        error("Expected to be greater than or equal to " .. tostring(x) .. ", was " .. tostring(self._actual) .. ".")
+    end
+end
+
+function Assertion:isBetween(lowerBoundExclusive, upperBoundExclusive)
+    if upperBoundExclusive < lowerBoundExclusive then
+        local temp = lowerBoundExclusive
+        lowerBoundExclusive = upperBoundExclusive
+        upperBoundExclusive = temp
+    end
+
+    if not (self._actual > lowerBoundExclusive and self._actual < upperBoundExclusive) then
+        error("Expected to be between " .. tostring(lowerBoundExclusive) .. " and " .. tostring(upperBoundExclusive)
+                .. ", was " .. tostring(self._actual) .. ".")
+    end
+end
+
+function Assertion:isBetweenInclusive(lowerBoundInclusive, upperBoundInclusive)
+    if upperBoundInclusive < lowerBoundInclusive then
+        local temp = lowerBoundInclusive
+        lowerBoundInclusive = upperBoundInclusive
+        upperBoundInclusive = temp
+    end
+
+    if not (self._actual >= lowerBoundInclusive and self._actual <= upperBoundInclusive) then
+        error("Expected to be between " .. tostring(lowerBoundInclusive) .. " (inclusive) and "
+                .. tostring(upperBoundInclusive) .. " (inclusive), was " .. tostring(self._actual) .. ".")
+    end
+end
+
+function Assertion:isBetweenInclusiveLower(lowerBoundInclusive, upperBoundExclusive)
+    if upperBoundExclusive < lowerBoundInclusive then
+        local temp = lowerBoundInclusive
+        lowerBoundInclusive = upperBoundExclusive
+        upperBoundExclusive = temp
+    end
+
+    if not (self._actual >= lowerBoundInclusive and self._actual < upperBoundExclusive) then
+        error("Expected to be between " .. tostring(lowerBoundInclusive) .. " (inclusive) and "
+                .. tostring(upperBoundExclusive) .. " (inclusive), was " .. tostring(self._actual) .. ".")
+    end
+end
+
+function Assertion:isBetweenInclusiveUpper(lowerBoundExclusive, upperBoundInclusive)
+    if upperBoundInclusive < lowerBoundExclusive then
+        local temp = lowerBoundExclusive
+        lowerBoundExclusive = upperBoundInclusive
+        upperBoundInclusive = temp
+    end
+
+    if not (self._actual > lowerBoundExclusive and self._actual <= upperBoundInclusive) then
+        error("Expected to be between " .. tostring(lowerBoundExclusive) .. " (inclusive) and "
+                .. tostring(upperBoundInclusive) .. " (inclusive), was " .. tostring(self._actual) .. ".")
     end
 end
 --endregion
