@@ -13,12 +13,30 @@ Assertion =
 
 __internal.Assertion = {}
 
+__internal.Assertion.defaultEquator = function(a, b) return a == b end
+__internal.Assertion.defaultComparator = function(a, b) return a < b end
+
 function __internal.Assertion.constructor(actual)
-    return { _actual = actual }
+    return
+    {
+        _actual     = actual,
+        _equator    = __internal.Assertion.defaultEquator,
+        _comparator = __internal.Assertion.defaultComparator,
+    }
 end
 
 makePseudoClass("Collection", Collection, __internal.Collection.constructor)
 --endregion
+
+---@param equator fun(a: any, b: any): boolean
+function Assertion:withEquator(equator)
+    self._equator = equator
+end
+
+---@param comparator fun(a: any, b: any): boolean
+function Assertion:withComparator(comparator)
+    self._comparator = comparator
+end
 
 function Assertion:isTrue()
     if self._actual ~= true then
@@ -33,13 +51,13 @@ function Assertion:isFalse()
 end
 
 function Assertion:equals(expected)
-    if expected ~= self._actual then
+    if not self._equator(expected, self._actual) then
         error("\nExpected value: " .. tostring(expected) .. "\nActual value:   " .. tostring(self._actual), 2)
     end
 end
 
 function Assertion:doesntEqual(notExpected)
-    if notExpected == self._actual then
+    if not self._equator(notExpected, self._actual) then
         error("\nUnexpected value: " .. tostring(self._actual), 2)
     end
 end
@@ -89,7 +107,7 @@ function Assertion:containsContentsOf(t)
     local missingValues = {}
 
     for _, v in ipairs(t) do
-        if not tbl.contains(self._actual, v) then
+        if not tbl.contains(self._actual, v, self._equator) then
             tbl.add(missingValues, v)
         end
     end
@@ -109,7 +127,7 @@ function Assertion:containsNothingButContentsOf(t)
     local additionalValues = {}
 
     for _, v in pairs(self._actual) do
-        if not tbl.contains(t, v) then
+        if not tbl.contains(t, v, self._equator) then
             tbl.add(additionalValues, v)
         end
     end
@@ -132,7 +150,7 @@ function Assertion:containsExactlyContentsOf(t)
     local unexpectedValues = {}
 
     for _, v in pairs(self._actual) do
-        local positionOfVInExpectedValues = tbl.indexOf(expectedValues, v)
+        local positionOfVInExpectedValues = tbl.indexOf(expectedValues, v, self._equator)
 
         if positionOfVInExpectedValues == nil then
             tbl.add(unexpectedValues, v)
@@ -190,25 +208,25 @@ function Assertion:isEmpty()
 end
 
 function Assertion:isLessThan(x)
-    if not (self._actual < x) then
+    if not (self._comparator(self._actual, x)) then
         error("Expected to be less than " .. tostring(x) .. ", was " .. tostring(self._actual) .. ".")
     end
 end
 
 function Assertion:isLessThanOrEqualTo(x)
-    if not (self._actual <= x) then
+    if self._comparator(x, self._actual) then
         error("Expected to be less than or equal to " .. tostring(x) .. ", was " .. tostring(self._actual) .. ".")
     end
 end
 
 function Assertion:isGreaterThan(x)
-    if not (self._actual > x) then
+    if not self._comparator(x, self._actual) then
         error("Expected to be greater than " .. tostring(x) .. ", was " .. tostring(self._actual) .. ".")
     end
 end
 
 function Assertion:isGreaterThanOrEqualTo(x)
-    if not (self._actual >= x) then
+    if self._comparator(self._actual, x) then
         error("Expected to be greater than or equal to " .. tostring(x) .. ", was " .. tostring(self._actual) .. ".")
     end
 end
@@ -220,7 +238,7 @@ function Assertion:isBetween(lowerBoundExclusive, upperBoundExclusive)
         upperBoundExclusive = temp
     end
 
-    if not (self._actual > lowerBoundExclusive and self._actual < upperBoundExclusive) then
+    if not (self._comparator(lowerBoundExclusive, self._actual) and self._comparator(self._actual, upperBoundExclusive)) then
         error("Expected to be between " .. tostring(lowerBoundExclusive) .. " and " .. tostring(upperBoundExclusive)
                 .. ", was " .. tostring(self._actual) .. ".")
     end
@@ -233,7 +251,7 @@ function Assertion:isBetweenInclusive(lowerBoundInclusive, upperBoundInclusive)
         upperBoundInclusive = temp
     end
 
-    if not (self._actual >= lowerBoundInclusive and self._actual <= upperBoundInclusive) then
+    if not ((not self._comparator(self._actual, lowerBoundInclusive)) and (not self._comparator(upperBoundInclusive, self._actual))) then
         error("Expected to be between " .. tostring(lowerBoundInclusive) .. " (inclusive) and "
                 .. tostring(upperBoundInclusive) .. " (inclusive), was " .. tostring(self._actual) .. ".")
     end
@@ -246,7 +264,7 @@ function Assertion:isBetweenInclusiveLower(lowerBoundInclusive, upperBoundExclus
         upperBoundExclusive = temp
     end
 
-    if not (self._actual >= lowerBoundInclusive and self._actual < upperBoundExclusive) then
+    if not ((not self._comparator(self._actual, lowerBoundInclusive)) and self._comparator(self._actual, upperBoundExclusive)) then
         error("Expected to be between " .. tostring(lowerBoundInclusive) .. " (inclusive) and "
                 .. tostring(upperBoundExclusive) .. " (inclusive), was " .. tostring(self._actual) .. ".")
     end
@@ -259,7 +277,7 @@ function Assertion:isBetweenInclusiveUpper(lowerBoundExclusive, upperBoundInclus
         upperBoundInclusive = temp
     end
 
-    if not (self._actual > lowerBoundExclusive and self._actual <= upperBoundInclusive) then
+    if not (self._comparator(lowerBoundExclusive, self._actual) and (not self._comparator(upperBoundInclusive, self._actual))) then
         error("Expected to be between " .. tostring(lowerBoundExclusive) .. " (inclusive) and "
                 .. tostring(upperBoundInclusive) .. " (inclusive), was " .. tostring(self._actual) .. ".")
     end
