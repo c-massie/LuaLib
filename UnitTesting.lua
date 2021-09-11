@@ -189,11 +189,34 @@ function Assertion:containsExactly(...)
 end
 
 ---@param n number
-function Assertion:hasSize(n)
+function Assertion:hasSizeViaOperator(n)
     local size = #(self._actual)
 
     if size ~= n then
-        error("Expected to have a size of " .. tostring(v) .. ", actually had a size of " .. tostring(size) .. ".")
+        error("Expected to have a size of " .. tostring(n) .. " as reported by the size operator (#), actually had a "
+                + "size of " .. tostring(size) .. ".")
+    end
+end
+
+function Assertion:hasSize(n)
+    local size = 0
+
+    for _, _ in pairs(self._actual) do
+        size = size + 1
+    end
+
+    if size ~= n then
+        error("Expected to have a size of " .. tostring(n) .. ", actually had a size of " .. tostring(size) .. ".")
+    end
+end
+
+function Assertion:isEmptyViaOperator()
+    if #(self._actual) ~= 0 then
+        local errorMsg = "Expected to be empty as reported by the size operator (#), was not. Actually contained:"
+
+        for k, v in ipairs(self._actual) do
+            errorMsg = errorMsg .. "\n    " .. tostring(v)
+        end
     end
 end
 
@@ -280,6 +303,18 @@ function Assertion:isBetweenInclusiveUpper(lowerBoundExclusive, upperBoundInclus
     if not (self._comparator(lowerBoundExclusive, self._actual) and (not self._comparator(upperBoundInclusive, self._actual))) then
         error("Expected to be between " .. tostring(lowerBoundExclusive) .. " (inclusive) and "
                 .. tostring(upperBoundInclusive) .. " (inclusive), was " .. tostring(self._actual) .. ".")
+    end
+end
+
+function Assertion:isPositive()
+    if self._comparator(self._actual, 0) then
+        error("Expected to be positive, was " .. tostring(self._actual))
+    end
+end
+
+function Assertion:isNegative()
+    if self._comparator(0, self._actual) then
+        error("Expected to be negative, was " .. tostring(self._actual))
     end
 end
 --endregion
